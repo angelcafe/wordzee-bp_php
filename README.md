@@ -1,4 +1,3 @@
-"# wordzee-bp_php" 
-Buscador de Palabras para Wordzee
+# wordzee-bp_php
 
-Aún falta añadir comentarios e implementar la administración que actualmente se encuentra en estado Beta.
+Versión PHP del buscador de palabras para Wordzee
