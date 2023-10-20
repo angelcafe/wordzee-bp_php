@@ -1,0 +1,53 @@
+.herramientas {
+    min-width: 25.3em;
+}
+
+#idBorrarPalabra,
+#idBotonBuscaPalabras {
+    cursor: pointer;
+}
+
+#menu {
+    background: #fff;
+    border: 1px solid #C6C6C6;
+    box-shadow: 2px 2px 2px 0px rgba(143, 144, 145, 1);
+    -moz-box-shadow: 2px 2px 2px 0px rgba(143, 144, 145, 1);
+    -webkit-box-shadow: 2px 2px 2px 0px rgba(143, 144, 145, 1);
+    color: #555;
+    display: none;
+    font-family: sans-serif;
+    font-size: 15px;
+    padding: 0px;
+    position: absolute;
+    transition: opacity .5s ease-in-out;
+    -moz-transition: opacity .5s ease-in-out;
+    -webkit-transition: opacity .5s ease-in-out;
+}
+
+#menu div {
+    color: #555;
+    display: block;
+    padding: 6px 8px 6px 8px;
+    position: relative;
+    text-decoration: none;
+    width: 294px;
+}
+
+#menu div img,
+#menu div i.fa {
+    font-size: 17px;
+    height: 20px;
+    left: 5px;
+    position: absolute;
+    top: 2px;
+    width: 20px;
+}
+
+#menu span:hover {
+    background: #69a0f1;
+    color: #fff;
+}
+
+#menu span {
+    font-weight: bold;
+}
