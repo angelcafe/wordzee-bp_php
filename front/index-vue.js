@@ -33,7 +33,7 @@ const app = createApp({
                     id: `ronda${ronda}`,
                     name: 'ronda',
                     type: 'radio',
-                    value: `ronda${ronda}`,
+                    value: ronda,
                 }
             }
         }

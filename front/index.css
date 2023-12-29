@@ -1,3 +1,5 @@
+@import url('../cdn/bootstrap.min.css');
+
 #idPuntosExtra .btn-secondary {
     width: 13%;
 }

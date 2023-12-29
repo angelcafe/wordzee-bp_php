@@ -1,10 +1,8 @@
 $(function () {
     const texto = /^[a-jl-vx-zA-JL-VX-ZñÑ]$/;
-
     $('input.btn-secondary').each(function () {
         $(this).on('click', cambiarValorBotones);
     });
-
     $('#letras>input')
         .on('keyup', function () {
             if (texto.test($(this).val()) === true) {
@@ -18,18 +16,23 @@ $(function () {
         .on('click', function () {
             $(this).trigger('select');
         });
-
     $('#principal').on('submit', function (e) {
         e.preventDefault();
         formularioEnviar('encontradas');
         formularioEnviar('ganadoras');
     });
-
     $('#ronda1').attr('checked', true);
+
+    const acther_ls = localStorage.getItem('ActivarHerramientas');
+    const acther = acther_ls !== null && acther_ls.indexOf('none') < 0;
+    $('#idHerramientas').addClass(acther_ls);
+    $('#idActivarHerramientas')
+        .prop('checked', acther)
+        .on('change', activarHerramientas);
 });
 
 function cambiarClaseBotones(e) {
-    const clase = {DL: 'rosa', TL: 'bg-success', DP: 'bg-primary', TP: 'bg-danger', I: 'info'};
+    const clase = { DL: 'rosa', TL: 'bg-success', DP: 'bg-primary', TP: 'bg-danger', I: 'info' };
     const valor = e.val().length > 0 ? e.val() : 'I';
     e
         .removeClass('rosa bg-success bg-primary bg-danger info')
@@ -37,8 +40,8 @@ function cambiarClaseBotones(e) {
 }
 
 function cambiarValorBotones(e) {
-    const clase = {I: 'rosa', DL: 'bg-success', TL: 'info'};
-    const valor = {I: 'DL', DL: 'TL', TL: ''};
+    const clase = { I: 'rosa', DL: 'bg-success', TL: 'info' };
+    const valor = { I: 'DL', DL: 'TL', TL: '' };
     const value = $(e.currentTarget).val().length > 0 ? $(e.currentTarget).val() : 'I';
     $(e.currentTarget)
         .removeClass('rosa bg-success info')
@@ -49,19 +52,17 @@ function cambiarValorBotones(e) {
 function formularioEnviar(obtener) {
     let formulario = new FormData(document.getElementById('principal'));
     formulario.append('obtener', obtener);
-    const initObject = {
-        method: 'POST',
-        body: formulario,
-        cache: 'no-cache'
-    };
-    const userRequest = new Request('index.php', initObject);
-    fetch(userRequest)
-        .then(response => response.text())
-        .then(data => {
-            if (obtener == 'encontradas') {
-                $('#idPalabrasEncontradas').html(data);
+    $.ajax({
+        url: './back/bp.php',
+        data: formulario,
+        processData: false,
+        contentType: false,
+        type: 'POST',
+        success: function (data) {
+            if (obtener === 'encontradas') {
+                mostrarPalabrasEncontradas('idPalabrasEncontradas', 'menu palenc noselect', JSON.parse(data));
             } else {
-                $('#idPalabrasGanadoras').html(data);
+                mostrarPalabrasEncontradas('idPalabrasGanadoras', 'menu noselect', JSON.parse(data));
                 $('#idPalabrasEncontradas')[0].scrollIntoView();
             }
             $('td.palenc').on('click', function () {
@@ -74,10 +75,24 @@ function formularioEnviar(obtener) {
                     $('#letras')[0].scrollIntoView();
                 }
             });
-        })
-        .catch(err => {
-            console.error(err);
-        });
+        },
+        error: function (data) {
+            console.error(data);
+        }
+    });
+}
+
+function mostrarPalabrasEncontradas(id, clase, datos) {
+    const maximo = Math.max(...Object.values(datos).map(arr => arr.length));
+    const palabras = Array.from({ length: 5 }, (_, x) =>
+        Array.from({ length: maximo }, (_, y) =>
+            `<td class="${clase}">${Object.values(datos[x] || [])[y] || ''}</td>`
+        )
+    );
+
+    $('#' + id)
+        .empty()
+        .append(palabras[0].map((_, y) => `<tr>${palabras.map(row => row[y]).join('')}</tr>`).join(''));
 }
 
 function restablecer() {
@@ -110,7 +125,7 @@ const palabras = {
         let link = document.createElement('a');
         let binaryData = [];
         binaryData.push(blob);
-        link.href = window.URL.createObjectURL(new Blob(binaryData, {type: "application/json"}));
+        link.href = window.URL.createObjectURL(new Blob(binaryData, { type: "application/json" }));
         link.download = fileName;
         link.click();
     },
@@ -126,7 +141,7 @@ const palabras = {
     },
     importar: function () {
         const file = document.getElementById('formFile').files[0];
-        var formd = new FormData();
+        const formd = new FormData();
         formd.append('archivo', file);
         palabras.alertaTitulo = 'Importar JSON';
         palabras.alertaTexto = 'Importación finalizada.';
@@ -137,11 +152,11 @@ const palabras = {
     responde: '',
 };
 
-document.getElementById('idActivarHerramientas').addEventListener("change", activarHerramientas);
-document.getElementById('idBorrar').addEventListener("click", e => {
-    palabras.borrar(document.getElementById('palabraBorrar').value);
+$('#idBorrar').on('click', e => {
+    palabras.borrar($('#palabraBorrar').val());
 });
-document.getElementById('idGuardar').addEventListener("click", palabras.guardar);
+$('#idGuardar').on('click', palabras.guardar);
+
 document.onclick = function (e) {
     document.getElementById('menu').style.display = 'none';
 }
@@ -162,23 +177,18 @@ Array.from(document.querySelectorAll("td.palenc")).forEach(element => {
     element.addEventListener("click", function (e) {
         let palabra = e.target.innerText.split(' ')[0];
         if (palabra.length > 0) {
-            document.getElementById('palabraBorrar').value = palabra;
+            $('#palabraBorrar').val(palabra);
         }
     });
 });
-document.getElementById('idHerramientas').className = document.getElementById('idHerramientas').className.replace('d-none', localStorage.getItem('ActivarHerramientas'));
-//TODO Cuando no existe la el storage, da error.
-const activar_herrramientas = localStorage.getItem('ActivarHerramientas').indexOf('none') < 0 ? true : false;
-document.getElementById('idActivarHerramientas').checked = activar_herrramientas;
 
 function activarHerramientas(e) {
-    let h = document.getElementById('idHerramientas');
     if (e.currentTarget.checked) {
-        h.className = h.className.replace('d-none ', '');
         localStorage.setItem('ActivarHerramientas', '');
+        $('#idHerramientas').removeClass('d-none');
     } else {
-        h.className = 'd-none ' + h.className;
         localStorage.setItem('ActivarHerramientas', 'd-none');
+        $('#idHerramientas').addClass('d-none');
     }
 }
 
@@ -190,11 +200,11 @@ function ajax(enviar = null, alerta = false, header = true) {
     let initObject = {
         method: 'POST', headers: reqHeader, body: enviar, cache: 'no-cache',
     };
-    var userRequest = new Request('back/buscapalabras.php', initObject);
+    const userRequest = new Request('back/buscapalabras.php', initObject);
     fetch(userRequest)
         .then(response => {
             if (response.status == 200) {
-                var contentType = response.headers.get("content-type");
+                const contentType = response.headers.get("content-type");
                 if (contentType && contentType.indexOf("application/json") !== -1) {
                     return response.json();
                 } else {
@@ -209,7 +219,7 @@ function ajax(enviar = null, alerta = false, header = true) {
                 palabras.responde = data;
                 palabras.alerta();
             } else if (enviar.indexOf('borrar') !== -1 || enviar.indexOf('guardar') !== -1) {
-                document.getElementById('principal').submit();
+                $('#principal').trigger('submit');
             } else if (enviar.indexOf('cargar') !== -1) {
                 palabrasCargadas(data);
             }
