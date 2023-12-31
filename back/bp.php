@@ -1,15 +1,16 @@
 <?php
-
-require 'Buscapalabras.php';
+spl_autoload_register(function ($nombre_clase) {
+    require $nombre_clase . '.php';
+});
 if (!empty($_POST['borrar'])) {
     $p = new buscapalabras();
-    $p->deleteWord($_POST['borrar']);
+    $p->borrarPalabra($_POST['borrar']);
 } elseif (!empty($_POST['guardar'])) {
     $p = new buscapalabras();
     $p->insertarPalabras(explode(',', $_POST['guardar']));
 } elseif (!empty($_POST['exportar'])) {
     $p = new buscapalabras();
-    echo ($p->exportWords());
+    echo ($p->exportarPalabras());
 } elseif (!empty($_FILES)) {
     $p = new buscapalabras();
     move_uploaded_file($_FILES['archivo']['tmp_name'], getcwd() . DIRECTORY_SEPARATOR . 'sp.json');
@@ -32,15 +33,40 @@ if (!empty($_POST['borrar'])) {
         }
     }
 
-    $ronda          = intval($_POST['ronda']);
-    $obtener        = strip_tags($_POST['obtener']);
+    $ronda   = intval($_POST['ronda']);
+    $obtener = strip_tags($_POST['obtener']);
 
-    $busca_palabras = new BuscaPalabras();
-    $busca_palabras->setPuntosExtra($puntos_extra);
-    $busca_palabras->setLetrasDisponibles($letras_disponibles);
-    $busca_palabras->setRonda($ronda);
-    $busca_palabras->buscar($obtener);
+    $busca_palabras = new Buscar($letras_disponibles);
+    $resultado = $busca_palabras->getResultado();
+    $palabras_puntos = palabrasPuntos($resultado, $puntos_extra, $ronda);
+    arsort($palabras_puntos);
 
-    $palabras_puntos = $busca_palabras->getPalabrasPuntos();
     echo json_encode($palabras_puntos);
+}
+
+function palabrasPuntos(array $palabras, array $puntos_extra, int $ronda)
+{
+    $aPuntos = [
+        'A' => 1, 'B' => 3, 'C' => 3, 'D' => 2, 'E' => 1, 'F' => 4, 'G' => 2, 'H' => 4,
+        'I' => 1, 'J' => 8, 'L' => 1, 'M' => 3, 'N' => 1, 'Ñ' => 8, 'O' => 1, 'P' => 3,
+        'Q' => 5, 'R' => 1, 'S' => 1, 'T' => 1, 'U' => 1, 'V' => 4, 'X' => 8, 'Y' => 4, 'Z' => 10
+    ];
+    $pExtra = ['' => 1, 'DL' => 2, 'TL' => 3, 'DP' => 1, 'TP' => 1];
+    $resultado = [];
+    foreach ($palabras as $palabra) {
+        $letras = mb_str_split($palabra);
+        $total = 0;
+        $letras_count = count($letras);
+        $puntos_extra_ronda = $puntos_extra[$letras_count - 3];
+        foreach ($letras as $key => $value) {
+            $total += $aPuntos[$value] * $ronda * $pExtra[$puntos_extra_ronda[$key]];
+        }
+        if ($letras_count === 6 && in_array('DP', $puntos_extra_ronda)) {
+            $total *= 2;
+        } elseif ($letras_count === 7 && in_array('TP', $puntos_extra_ronda)) {
+            $total *= 3;
+        }
+        $resultado += [$palabra => $total];
+    }
+    return $resultado;
 }

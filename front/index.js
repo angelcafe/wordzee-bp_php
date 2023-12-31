@@ -19,7 +19,7 @@ $(function () {
     $('#principal').on('submit', function (e) {
         e.preventDefault();
         formularioEnviar('encontradas');
-        formularioEnviar('ganadoras');
+        //formularioEnviar('ganadoras');
     });
     $('#ronda1').attr('checked', true);
 
@@ -60,9 +60,9 @@ function formularioEnviar(obtener) {
         type: 'POST',
         success: function (data) {
             if (obtener === 'encontradas') {
-                mostrarPalabrasEncontradas('idPalabrasEncontradas', 'menu palenc noselect', JSON.parse(data));
+                mostrarPalabrasEncontradas('idPalabrasEncontradas', 'menu palenc noselect', data);
             } else {
-                mostrarPalabrasEncontradas('idPalabrasGanadoras', 'menu noselect', JSON.parse(data));
+                mostrarPalabrasEncontradas('idPalabrasGanadoras', 'menu noselect', data);
                 $('#idPalabrasEncontradas')[0].scrollIntoView();
             }
             $('td.palenc').on('click', function () {
@@ -83,16 +83,19 @@ function formularioEnviar(obtener) {
 }
 
 function mostrarPalabrasEncontradas(id, clase, datos) {
-    const maximo = Math.max(...Object.values(datos).map(arr => arr.length));
-    const palabras = Array.from({ length: 5 }, (_, x) =>
-        Array.from({ length: maximo }, (_, y) =>
-            `<td class="${clase}">${Object.values(datos[x] || [])[y] || ''}</td>`
-        )
-    );
-
-    $('#' + id)
-        .empty()
-        .append(palabras[0].map((_, y) => `<tr>${palabras.map(row => row[y]).join('')}</tr>`).join(''));
+    const encontradas = JSON.parse(datos);
+    console.log(encontradas);
+    let tabla = [];
+    for (let palabra in encontradas) {
+        puntos = encontradas[palabra];
+        if (tabla[palabra.length - 3]) {
+            tabla[palabra.length - 3].push(`<td class="${clase}">${palabra + ' - ' + puntos}</td>`);
+        } else {
+            tabla[palabra.length - 3] = [`<td class="${clase}">${palabra + ' - ' + puntos}</td>`];
+        }
+    };
+    console.log(tabla);
+    $('#' + id).append('<tr>' + tabla + '</tr>');
 }
 
 function restablecer() {
