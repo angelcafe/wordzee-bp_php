@@ -65,8 +65,10 @@ function formularioEnviar() {
         contentType: false,
         type: 'POST',
         success: function (data) {
-            mostrarPalabrasEncontradas('idPalabrasEncontradas', 'menu palenc noselect', JSON.parse(data)['encontradas']);
-            mostrarPalabrasEncontradas('idPalabrasGanadoras', 'menu noselect', JSON.parse(data)['sugeridas']);
+            // mostrarPalabrasEncontradas('idPalabrasEncontradas', 'menu palenc noselect', JSON.parse(data)['encontradas']);
+            // mostrarPalabrasEncontradas('idPalabrasGanadoras', 'menu noselect', JSON.parse(data)['sugeridas']);
+            mostrarPalabrasEncontradas('idPalabrasEncontradas', 'palenc noselect', JSON.parse(data)['encontradas']);
+            mostrarPalabrasEncontradas('idPalabrasGanadoras', 'noselect', JSON.parse(data)['sugeridas']);
             $('#cargando').addClass('d-none');
             $('td.palenc').on('click', function () {
                 let palabra = $(this).text().split(' ')[0];
