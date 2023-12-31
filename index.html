@@ -14,7 +14,7 @@
         <span class="navbar-brand">Buscador de palabras para Wordzee!
             <a class="fs-6" data-bs-toggle="modal" href="#id_ventana_version">{{version}}</a>
         </span>
-        <div class="form-check form-switch form-check-inline">
+        <div class="form-check form-switch form-check-inline d-none">
             <input class="form-check-input" type="checkbox" role="switch" id="idActivarHerramientas">
             <label class="form-check-label" for="idActivarHerramientas">Activar herramientas</label>
         </div>
@@ -168,6 +168,9 @@
     <div>
         <i class="bi bi-eraser-fill"></i> Borrar <span id="idBorrarPalabra"></span> de la Base de Datos
     </div>
+</div>
+<div id="cargando" class="d-none position-fixed top-50 start-50 translate-middle">
+    <img src="front/cargando.gif" alt="cargando">
 </div>
 <script src="cdn/bootstrap.bundle.min.js"></script>
 <script src="cdn/jquery-3.7.1.min.js"></script>

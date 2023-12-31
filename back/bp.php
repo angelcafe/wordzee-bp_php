@@ -15,7 +15,7 @@ if (!empty($_POST['borrar'])) {
     $p = new buscapalabras();
     move_uploaded_file($_FILES['archivo']['tmp_name'], getcwd() . DIRECTORY_SEPARATOR . 'sp.json');
     $p->importarPalabras();
-} elseif (!empty($_POST['ronda']) && !empty($_POST['obtener'])) {
+} elseif (!empty($_POST['ronda'])) {
     $pe_permitidos = ['DP', 'TP', 'DL', 'TL', ''];
     for ($x = 0; $x < 5; $x++) {
         for ($y = 0; $y < 3 + $x; $y++) {
@@ -34,17 +34,20 @@ if (!empty($_POST['borrar'])) {
     }
 
     $ronda   = intval($_POST['ronda']);
-    $obtener = strip_tags($_POST['obtener']);
 
     $busca_palabras = new Buscar($letras_disponibles);
-    $resultado = $busca_palabras->getResultado();
-    $palabras_puntos = palabrasPuntos($resultado, $puntos_extra, $ronda);
-    arsort($palabras_puntos);
+    $resultado      = $busca_palabras->getResultado();
+    $palabras       = $busca_palabras->getPalabras();
+    $palabras_puntos['encontradas'] = palabrasPuntos($resultado, $puntos_extra, $ronda);
+    $palabras_puntos['sugeridas'] = palabrasPuntos($palabras, $puntos_extra, $ronda);
+    arsort($palabras_puntos['encontradas']);
+    arsort($palabras_puntos['sugeridas']);
+    $palabras_puntos['sugeridas'] = palabrasSugeridas($palabras_puntos['sugeridas']);
 
     echo json_encode($palabras_puntos);
 }
 
-function palabrasPuntos(array $palabras, array $puntos_extra, int $ronda)
+function palabrasPuntos(array $palabras, array $puntos_extra, int $ronda): array
 {
     $aPuntos = [
         'A' => 1, 'B' => 3, 'C' => 3, 'D' => 2, 'E' => 1, 'F' => 4, 'G' => 2, 'H' => 4,
@@ -67,6 +70,24 @@ function palabrasPuntos(array $palabras, array $puntos_extra, int $ronda)
             $total *= 3;
         }
         $resultado += [$palabra => $total];
+    }
+    return $resultado;
+}
+
+function palabrasSugeridas(array $palabras): array
+{
+    $total = 5;
+    $resultado = [];
+    $procesado = [];
+    foreach ($palabras as $palabra => $valor) {
+        $longitud = mb_strlen($palabra);
+        if (in_array($longitud, $procesado) === false) {
+            $resultado += [$palabra => $valor];
+            if (--$total === 0) {
+                break;
+            }
+            $procesado[] = $longitud;
+        }
     }
     return $resultado;
 }

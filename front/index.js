@@ -18,8 +18,7 @@ $(function () {
         });
     $('#principal').on('submit', function (e) {
         e.preventDefault();
-        formularioEnviar('encontradas');
-        //formularioEnviar('ganadoras');
+        formularioEnviar();
     });
     $('#ronda1').attr('checked', true);
 
@@ -29,6 +28,13 @@ $(function () {
     $('#idActivarHerramientas')
         .prop('checked', acther)
         .on('change', activarHerramientas);
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+        $('html').attr('data-bs-theme', 'dark');
+    }
+    window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', event => {
+        const newColorScheme = event.matches ? "dark" : "light";
+        $('html').attr('data-bs-theme', newColorScheme);
+    });
 });
 
 function cambiarClaseBotones(e) {
@@ -49,9 +55,9 @@ function cambiarValorBotones(e) {
         .addClass(clase[value]);
 }
 
-function formularioEnviar(obtener) {
+function formularioEnviar() {
     let formulario = new FormData(document.getElementById('principal'));
-    formulario.append('obtener', obtener);
+    $('#cargando').removeClass('d-none');
     $.ajax({
         url: './back/bp.php',
         data: formulario,
@@ -59,12 +65,9 @@ function formularioEnviar(obtener) {
         contentType: false,
         type: 'POST',
         success: function (data) {
-            if (obtener === 'encontradas') {
-                mostrarPalabrasEncontradas('idPalabrasEncontradas', 'menu palenc noselect', data);
-            } else {
-                mostrarPalabrasEncontradas('idPalabrasGanadoras', 'menu noselect', data);
-                $('#idPalabrasEncontradas')[0].scrollIntoView();
-            }
+            mostrarPalabrasEncontradas('idPalabrasEncontradas', 'menu palenc noselect', JSON.parse(data)['encontradas']);
+            mostrarPalabrasEncontradas('idPalabrasGanadoras', 'menu noselect', JSON.parse(data)['sugeridas']);
+            $('#cargando').addClass('d-none');
             $('td.palenc').on('click', function () {
                 let palabra = $(this).text().split(' ')[0];
                 if (palabra.length > 0) {
@@ -83,19 +86,18 @@ function formularioEnviar(obtener) {
 }
 
 function mostrarPalabrasEncontradas(id, clase, datos) {
-    const encontradas = JSON.parse(datos);
-    console.log(encontradas);
-    let tabla = [];
-    for (let palabra in encontradas) {
-        puntos = encontradas[palabra];
-        if (tabla[palabra.length - 3]) {
-            tabla[palabra.length - 3].push(`<td class="${clase}">${palabra + ' - ' + puntos}</td>`);
-        } else {
-            tabla[palabra.length - 3] = [`<td class="${clase}">${palabra + ' - ' + puntos}</td>`];
-        }
-    };
-    console.log(tabla);
-    $('#' + id).append('<tr>' + tabla + '</tr>');
+    const tabla = [[], [], [], [], []];
+    for (const [palabra, puntos] of Object.entries(datos)) {
+        const index = palabra.length - 3;
+        tabla[index].push(`<td class="${clase}">${palabra} - ${puntos}</td>`);
+    }
+    const maximo = Math.max(...tabla.map(arr => arr.length));
+    const filas = Array.from({ length: maximo }, (_, x) => {
+        return '<tr>' + tabla.map(arr => arr[x] || '<td></td>').join('') + '</tr>';
+    });
+    $('#' + id)
+        .empty()
+        .append(filas.join(''));
 }
 
 function restablecer() {
