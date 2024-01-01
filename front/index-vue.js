@@ -30,7 +30,6 @@ const app = createApp({
             } else {
                 return {
                     class: "form-check-input",
-                    id: `ronda${ronda}`,
                     name: 'ronda',
                     type: 'radio',
                     value: ronda,

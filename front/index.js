@@ -20,7 +20,9 @@ $(function () {
         e.preventDefault();
         formularioEnviar();
     });
-    $('#ronda1').attr('checked', true);
+    $('input[name="ronda"]')
+        .on('change', () => $('#letras>input').val('').first().trigger('focus'))
+        .first().attr('checked', true);
 
     const acther_ls = localStorage.getItem('ActivarHerramientas');
     const acther = acther_ls !== null && acther_ls.indexOf('none') < 0;
@@ -28,6 +30,7 @@ $(function () {
     $('#idActivarHerramientas')
         .prop('checked', acther)
         .on('change', activarHerramientas);
+
     if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
         $('html').attr('data-bs-theme', 'dark');
     }
@@ -38,26 +41,25 @@ $(function () {
 });
 
 function cambiarClaseBotones(e) {
-    const clase = { DL: 'rosa', TL: 'bg-success', DP: 'bg-primary', TP: 'bg-danger', I: 'info' };
+    const clases = { DL: 'rosa', TL: 'bg-success', DP: 'bg-primary', TP: 'bg-danger', I: 'info' };
     const valor = e.val().length > 0 ? e.val() : 'I';
-    e
-        .removeClass('rosa bg-success bg-primary bg-danger info')
-        .addClass(clase[valor]);
+    e.removeClass(Object.values(clases).join(' ')).addClass(clases[valor]);
 }
 
 function cambiarValorBotones(e) {
-    const clase = { I: 'rosa', DL: 'bg-success', TL: 'info' };
-    const valor = { I: 'DL', DL: 'TL', TL: '' };
-    const value = $(e.currentTarget).val().length > 0 ? $(e.currentTarget).val() : 'I';
-    $(e.currentTarget)
+    const clases = { I: 'rosa', DL: 'bg-success', TL: 'info' };
+    const valores = { I: 'DL', DL: 'TL', TL: '' };
+    const $target = $(e.currentTarget);
+    const currentValue = $target.val().length > 0 ? $target.val() : 'I';
+    $target
         .removeClass('rosa bg-success info')
-        .val(valor[value])
-        .addClass(clase[value]);
+        .val(valores[currentValue])
+        .addClass(clases[currentValue]);
 }
 
 function formularioEnviar() {
     let formulario = new FormData(document.getElementById('principal'));
-    $('#cargando').removeClass('d-none');
+    let cargando = $('#cargando').removeClass('d-none');
     $.ajax({
         url: './back/bp.php',
         data: formulario,
@@ -65,18 +67,19 @@ function formularioEnviar() {
         contentType: false,
         type: 'POST',
         success: function (data) {
+            let parsedData = JSON.parse(data);
             // mostrarPalabrasEncontradas('idPalabrasEncontradas', 'menu palenc noselect', JSON.parse(data)['encontradas']);
             // mostrarPalabrasEncontradas('idPalabrasGanadoras', 'menu noselect', JSON.parse(data)['sugeridas']);
-            mostrarPalabrasEncontradas('idPalabrasEncontradas', 'palenc noselect', JSON.parse(data)['encontradas']);
-            mostrarPalabrasEncontradas('idPalabrasGanadoras', 'noselect', JSON.parse(data)['sugeridas']);
-            $('#cargando').addClass('d-none');
+            mostrarPalabrasEncontradas('idPalabrasEncontradas', 'palenc noselect', parsedData['encontradas']);
+            mostrarPalabrasEncontradas('idPalabrasGanadoras', 'noselect', parsedData['sugeridas']);
+            cargando.addClass('d-none');
             $('td.palenc').on('click', function () {
                 let palabra = $(this).text().split(' ')[0];
                 if (palabra.length > 0) {
-                    let contador = 0;
-                    $('#letras>input').each(function () {
-                        $(this).val(palabra[contador++]);
-                    });
+                    $('#letras>input').val(function (index, value) {
+                        return palabra[index];
+                    }).filter(function () { return !this.value.trim(); }).first().trigger('focus');
+                    $('#letras>input[value=""]').first().trigger('focus');
                     $('#letras')[0].scrollIntoView();
                 }
             });
